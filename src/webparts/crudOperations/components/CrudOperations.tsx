@@ -4,7 +4,7 @@ import { IListItem } from '../../../Concerns/IListItem';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Form } from '../../../Components/Form/Form';
 import { Display } from '../../../Components/Display/Display';
-import { getAllItems } from '../../../Services/Services';
+import { getAllItems, getLatestItem, getLatestItemId } from '../../../Contracts/Services';
 import { PrimaryButton } from 'office-ui-fabric-react';
 
 export interface IReactCrudState {
@@ -120,39 +120,46 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
   }
 
   readItem(): void {
-    this.getLatestItemId()
-      .then((itemId: number): Promise<SPHttpClientResponse> => {
-        if (itemId === -1) {
-          throw new Error('No items found in the list');
-        }
-
-        this.setState({
-          status: `Loading information about item ID: ${itemId}...`,
-          items: []
-        });
-        return this.props.spHttpClient.get(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${itemId})?$select=Title,Id`,
-          SPHttpClient.configurations.v1,
-          {
-            headers: {
-              'Accept': 'application/json;odata=nometadata',
-              'odata-version': ''
-            }
-          });
-      })
-      .then((response: SPHttpClientResponse): Promise<IListItem> => {
-        return response.json();
-      })
-      .then((item: IListItem): void => {
+    getLatestItem(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
+      .then((item) => {
         this.setState({
           status: "read",
           selectedItem: item
-        });
-      }, (error: any): void => {
-        this.setState({
-          status: 'Loading latest item failed with error: ' + error,
-          items: []
-        });
+        })
       });
+    // this.getLatestItemId()
+    //   .then((itemId: number): Promise<SPHttpClientResponse> => {
+    //     if (itemId === -1) {
+    //       throw new Error('No items found in the list');
+    //     }
+
+    //     this.setState({
+    //       status: `Loading information about item ID: ${itemId}...`,
+    //       items: []
+    //     });
+    //     return this.props.spHttpClient.get(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${itemId})?$select=Title,Id`,
+    //       SPHttpClient.configurations.v1,
+    //       {
+    //         headers: {
+    //           'Accept': 'application/json;odata=nometadata',
+    //           'odata-version': ''
+    //         }
+    //       });
+    //   })
+    //   .then((response: SPHttpClientResponse): Promise<IListItem> => {
+    //     return response.json();
+    //   })
+    //   .then((item: IListItem): void => {
+    //     this.setState({
+    //       status: "read",
+    //       selectedItem: item
+    //     });
+    //   }, (error: any): void => {
+    //     this.setState({
+    //       status: 'Loading latest item failed with error: ' + error,
+    //       items: []
+    //     });
+    //   });
   }
 
   updateItem(): void {
@@ -162,7 +169,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
 
     let latestItemId: number = undefined;
 
-    this.getLatestItemId()
+    getLatestItemId(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
       .then((itemId: number): Promise<SPHttpClientResponse> => {
         if (itemId === -1) {
           throw new Error('No items found in the list');
@@ -234,7 +241,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
 
     let latestItemId: number = undefined;
     let etag: string = undefined;
-    this.getLatestItemId()
+    getLatestItemId(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
       .then((itemId: number): Promise<SPHttpClientResponse> => {
         if (itemId === -1) {
           throw new Error('No items found in the list');
@@ -265,7 +272,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
           items: []
         });
 
-        return this.props.spHttpClient.post(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${item.ID})`,
+        return this.props.spHttpClient.post(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${item.id})`,
           SPHttpClient.configurations.v1,
           {
             headers: {
@@ -293,7 +300,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
   render() {
     const items: JSX.Element[] = this.state.items.map((item: IListItem, i: number): JSX.Element => {
       return (
-        <li>{item.title} ({item.ID}) </li>
+        <li>{item.title} ({item.id}) </li>
       );
     });
     return (

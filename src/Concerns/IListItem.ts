@@ -1,13 +1,27 @@
 export interface IListItem {
-    ID: number | undefined;
+    id: number | undefined;
     title: string | undefined;
     lastName: string | undefined;
     certifications: string | undefined;
     department: string | undefined;
     age: number;
-    FamilyIncome: number;
-    DOB: Date;
-    Married: "Yes" | "No";
-    LinkedIn: string;
-    Photo: File;
+    familyIncome: number;
+    dOB: Date;
+    married: "Yes" | "No";
+    linkedIn: string;
+    photo: File;
+}
+
+export enum Keys {
+    ID = "id",
+    Title = "title",
+    LastName = "lastName",
+    Certifications = "certifications",
+    Department = "department",
+    Age = "age",
+    FamilyIncome = "familyIncome",
+    DOB = "dOB",
+    Married = "married",
+    LinkedIn = "linkedIn",
+    Photo = "photo"
 }

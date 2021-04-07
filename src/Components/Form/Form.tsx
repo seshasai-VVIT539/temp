@@ -2,8 +2,8 @@ import * as React from "react";
 import {
     createItem,
     updateItem
-} from "../../Services/Services";
-import { IListItem } from "../../Concerns/IListItem";
+} from "../../Contracts/Services";
+import { IListItem, Keys } from "../../Concerns/IListItem";
 import "./Form.scss";
 import { SPHttpClient } from '@microsoft/sp-http';
 import { Display } from "../Display/Display";
@@ -30,18 +30,7 @@ interface IFormState {
     display: boolean
 }
 
-enum Keys {
-    Title = "Title",
-    LastName = "LastName",
-    Certifications = "Certifications",
-    Department = "Department",
-    Age = "Age",
-    FamilyIncome = "FamilyIncome",
-    DOB = "DOB",
-    Married = "Married",
-    LinkedIn = "LinkedIn",
-    Photo = "Photo"
-}
+
 
 const dropdownStyles: Partial<IDropdownStyles> = {
     dropdown: { width: 300 },
@@ -50,7 +39,7 @@ const controlClass = mergeStyleSets({
     control: {
         margin: '0 0 15px 0',
         maxWidth: '300px',
-    },
+    }
 });
 
 
@@ -68,22 +57,23 @@ const maritalOptions: IDropdownOption[] = [
 
 
 export class Form extends React.Component<IFormProps, IFormState> {
+
     constructor(props: IFormProps) {
         super(props);
         this.state = {
             item: this.props.item !== undefined ? this.props.item :
                 {
                     title: undefined,
-                    ID: undefined,
+                    id: undefined,
                     certifications: undefined,
                     lastName: undefined,
                     department: undefined,
                     age: undefined,
-                    FamilyIncome: undefined,
-                    DOB: undefined,
-                    Married: "No",
-                    LinkedIn: undefined,
-                    Photo: undefined
+                    familyIncome: undefined,
+                    dOB: undefined,
+                    married: "No",
+                    linkedIn: undefined,
+                    photo: undefined
                 },
             display: false
         }
@@ -93,18 +83,22 @@ export class Form extends React.Component<IFormProps, IFormState> {
         this.handleIntegerInputChange = this.handleIntegerInputChange.bind(this);
     }
 
-    handleChange(key: Keys, value: string) {
+    handleChange(key: string, value: string | IDropdownOption) {
         let newItem: IListItem = {
             ...this.state.item,
         };
-        newItem[key] = (value as any);
+        if (typeof value == "string") {
+            newItem[key] = value;
+        } else {
+            newItem[key] = (value as IDropdownOption).text;
+        }
         this.setState({
             item: newItem,
             display: false
         })
     }
 
-    handleIntegerInputChange(key: Keys, value: string) {
+    handleIntegerInputChange(key: string, value: string) {
         const onlyNums = value.replace(/[^0-9]/g, '');
         const age = Number(value);
         let newItem: IListItem = {
@@ -147,17 +141,6 @@ export class Form extends React.Component<IFormProps, IFormState> {
             <div>
                 {!this.state.display &&
                     <div className="ms-Grid">
-                        {/* {this.props.item !== undefined &&
-                            <div className="ms-Grid-row">
-                                <Label>ID : {this.props.item === undefined ? "" : this.props.item.ID}</Label>
-                                <div className="cell">
-                                    ID
-                        </div>
-                                <div className="cell">
-                                    {this.props.item === undefined ? "" : this.props.item.ID}
-                                </div>
-                            </div>
-                        } */}
                         <div>
                             <TextField label="Name"
                                 defaultValue={this.state.item === undefined ? "" :
@@ -195,6 +178,9 @@ export class Form extends React.Component<IFormProps, IFormState> {
                             <Dropdown
                                 placeholder="Select Department"
                                 label="Department"
+                                onChange={(event: any, selectedOption: IDropdownOption) => {
+                                    this.handleChange(Keys.Department, selectedOption);
+                                }}
                                 options={deptOptions}
                                 styles={dropdownStyles}
                             />
@@ -212,8 +198,8 @@ export class Form extends React.Component<IFormProps, IFormState> {
                         <div>
                             <TextField label="Family Income"
                                 defaultValue={this.state.item === undefined ? "" :
-                                    this.state.item.FamilyIncome === undefined ? "" :
-                                        String(this.state.item.FamilyIncome)}
+                                    this.state.item.familyIncome === undefined ? "" :
+                                        String(this.state.item.familyIncome)}
                                 onChange={(event: any) => {
                                     this.handleIntegerInputChange(Keys.FamilyIncome, event.target.value);
                                 }}
@@ -227,8 +213,8 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                 ariaLabel="Date of Birth"
                                 defaultValue={
                                     this.state.item === undefined &&
-                                    this.state.item.DOB === undefined &&
-                                    this.state.item.DOB.toDateString()
+                                    this.state.item.dOB === undefined &&
+                                    this.state.item.dOB.toDateString()
                                 }
                                 onChange={(event: any) => {
                                     this.handleChange(Keys.DOB, event.target.value);
@@ -242,9 +228,12 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                 options={maritalOptions}
                                 defaultValue={
                                     this.state.item === undefined ? 'No' :
-                                        this.state.item.Married === undefined ? "" :
-                                            this.state.item.Married
+                                        this.state.item.married === undefined ? "" :
+                                            this.state.item.married
                                 }
+                                onChange={(event: any, selectedOption: IDropdownOption) => {
+                                    this.handleChange(Keys.Married, selectedOption);
+                                }}
                                 styles={dropdownStyles}
                             />
                         </div>
@@ -252,8 +241,8 @@ export class Form extends React.Component<IFormProps, IFormState> {
                             <TextField label="Linkedin Profile"
                                 placeholder="Enter a URL"
                                 defaultValue={this.state.item === undefined ? "" :
-                                    this.state.item.LinkedIn === undefined ? "" :
-                                        this.state.item.LinkedIn}
+                                    this.state.item.linkedIn === undefined ? "" :
+                                        this.state.item.linkedIn}
                                 onChange={(event: any) => {
                                     this.handleIntegerInputChange(Keys.LinkedIn, event.target.value);
                                 }}
@@ -270,7 +259,7 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                 onClick={this.back}
                             />
                         </div>
-                        <br/>
+                        <br />
                     </div>
                 }
                 {

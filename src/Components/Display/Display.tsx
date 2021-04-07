@@ -1,5 +1,6 @@
+import { Label } from "office-ui-fabric-react";
 import * as React from "react";
-import { IListItem } from "../../Concerns/IListItem";
+import { IListItem, Keys } from "../../Concerns/IListItem";
 import styles from "./Display.module.scss";
 
 interface IDisplayProps {
@@ -16,22 +17,42 @@ export class Display extends React.Component<IDisplayProps>{
         return (
             <div>
                 <div className={styles.table}>
-                    <div className="row">
-                        <div className="cell">
-                            ID
-                        </div>
-                        <div className="cell">
-                            {this.props.item !== undefined && this.props.item.ID}
-                        </div>
+                    <div>
+                        <Label>
+                            ID&nbsp;:&nbsp;{this.props.item.id}
+                        </Label>
                     </div>
-                    <div className="row">
-                        <div className="cell">
-                            Title
-                        </div>
-                        <div className="cell">
-                            {this.props.item !== undefined && this.props.item.title}
-                        </div>
+                    <div>
+                        <Label>
+                            Name&nbsp;:&nbsp;{this.props.item[Keys.Title]}
+                        </Label>
                     </div>
+                    <div>
+                        <Label>
+                            Last Name&nbsp;:&nbsp;{this.props.item[Keys.LastName]}
+                        </Label>
+                    </div>
+                    <div>
+                        <Label>
+                            Certifications&nbsp;:&nbsp;{this.props.item[Keys.Certifications]}
+                        </Label>
+                    </div>
+                    <div>
+                        <Label>
+                            Department&nbsp;:&nbsp;{this.props.item[Keys.Department]}
+                        </Label>
+                    </div>
+                    <div>
+                        <Label>
+                            Age&nbsp;:&nbsp;{this.props.item[Keys.Age]}
+                        </Label>
+                    </div>
+                    <div>
+                        <Label>
+                            Family Income&nbsp;:&nbsp;{this.props.item[Keys.FamilyIncome]}
+                        </Label>
+                    </div>
+
                     <div className="row">
                         <div className="cell">
                             <input type="button"

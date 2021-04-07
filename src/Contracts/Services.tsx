@@ -9,8 +9,15 @@ export function createItem(
     listName: string
 ): Promise<SPHttpClientResponse> {
     let postBody = {
-        "Name": data.title,
-        "Family_x0020_Income": 100
+        "Title": data.title,
+        "LastName": data.lastName,
+        "Certifications": data.certifications,
+        "Department": data.department,
+        "Age": data.age,
+        "Family_x0020_Income": data.familyIncome,
+        "Date_x0020_of_x0020_Birth": data.dOB,
+        "Married": data.married,
+        "Linkedin_x0020_Profile": data.linkedIn,
     }
     const body: string = JSON.stringify(postBody);
     return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`,
@@ -27,7 +34,7 @@ export function createItem(
             return response.json();
         })
         .then((item: IListItem) => {
-            return item.ID;
+            return item.id;
         })
         .catch((error) => {
             return error
@@ -35,7 +42,9 @@ export function createItem(
 }
 
 export function getAllItems(spHttpClient: SPHttpClient,
-    siteUrl: string, listName: string): Promise<SPHttpClientResponse> {
+    siteUrl: string,
+    listName: string
+): Promise<SPHttpClientResponse> {
     // return new Promise<SPHttpClientResponse>((): void => {
     return spHttpClient.get(
         `${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`,
@@ -121,7 +130,7 @@ export function updateItem(data: IListItem, spHttpClient: SPHttpClient,
 
     const body: string = JSON.stringify(data);
 
-    return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${data.ID})`,
+    return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${data.id})`,
         SPHttpClient.configurations.v1,
         {
             headers: {
@@ -134,7 +143,7 @@ export function updateItem(data: IListItem, spHttpClient: SPHttpClient,
             body: body
         })
         .then((response: SPHttpClientResponse) => {
-            return data.ID;
+            return data.id;
         })
         .catch((error) => {
             return error;
@@ -174,7 +183,7 @@ export function deleteItem(spHttpClient: SPHttpClient, siteUrl: string,
         })
         .then((item: IListItem): Promise<SPHttpClientResponse> => {
 
-            return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${item.ID})`,
+            return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${item.id})`,
                 SPHttpClient.configurations.v1,
                 {
                     headers: {
@@ -198,5 +207,46 @@ export function deleteItem(spHttpClient: SPHttpClient, siteUrl: string,
         })
         .catch((error: any) => {
             return Error;
+        });
+}
+
+export function getLatestItem(spHttpClient: SPHttpClient,
+    siteUrl: string,
+    listName: string
+): Promise<any> {
+    return getLatestItemId(spHttpClient, siteUrl, listName)
+        .then((itemId: number): Promise<any> => {
+            return spHttpClient.get(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})`,
+                SPHttpClient.configurations.v1,
+                {
+                    headers: {
+                        'Accept': 'application/json;odata=nometadata',
+                        'odata-version': ''
+                    }
+                });
+        })
+        .then((response: SPHttpClientResponse): Promise<IListItem> => {
+            return response.json();
+        })
+        .then((item: any) => {
+            let newitem: IListItem = {
+                id: item["ID"],
+                title: item["Title"],
+                lastName: item["LastName"],
+                certifications: item["Certifications"],
+                department: item["Department"],
+                age: item["Age"],
+                familyIncome: item["Family_x0020_Income"],
+                dOB: item["Date_x0020_of_x0020_Birth"],
+                married: item["Married"],
+                linkedIn: item["Linkedin_x0020_Profile"],
+                photo: undefined
+            };
+            return newitem;
+        }, (error: any): void => {
+            return error;
+        })
+        .catch((error) => {
+            return error;
         });
 }

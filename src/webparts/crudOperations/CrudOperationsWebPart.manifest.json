@@ -21,7 +21,7 @@
     "description": { "default": "CrudOperations description" },
     "officeFabricIconFontName": "Page",
     "properties": {
-      "listName": "CrudOperations"
+      "listName": "Employees"
     }
   }]
 }
