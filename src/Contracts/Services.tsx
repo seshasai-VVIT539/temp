@@ -1,13 +1,7 @@
 import { IListItem } from "../Concerns/IListItem";
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 
-
-export function createItem(
-    data: IListItem,
-    spHttpClient: SPHttpClient,
-    siteUrl: string,
-    listName: string
-): Promise<SPHttpClientResponse> {
+function toPostBody(data: IListItem) {
     let postBody = {
         "Title": data.title,
         "LastName": data.lastName,
@@ -16,9 +10,41 @@ export function createItem(
         "Age": data.age,
         "Family_x0020_Income": data.familyIncome,
         "Date_x0020_of_x0020_Birth": data.dOB,
-        "Married": data.married,
-        "Linkedin_x0020_Profile": data.linkedIn,
+        "Married": data.married == "Yes" ? true : false,
     }
+    if (data.linkedIn.length != 0) {
+        postBody["Linkedin_x0020_Profile"] = {
+            'Description': 'Linkedin Profile',
+            'Url': data.linkedIn
+        }
+    }
+    return postBody;
+}
+
+function toListItem(item: any): IListItem {
+    let newitem: IListItem = {
+        id: item["Id"],
+        title: item["Title"],
+        lastName: item["LastName"],
+        certifications: item["Certifications"],
+        department: item["Department"],
+        age: item["Age"],
+        familyIncome: item["Family_x0020_Income"],
+        dOB: item["Date_x0020_of_x0020_Birth"],
+        married: item["Married"],
+        linkedIn: item["Linkedin_x0020_Profile"]["Url"],
+        photo: undefined
+    };
+    return newitem;
+}
+
+export function createItem(
+    data: IListItem,
+    spHttpClient: SPHttpClient,
+    siteUrl: string,
+    listName: string
+): Promise<SPHttpClientResponse> {
+    let postBody = toPostBody(data);
     const body: string = JSON.stringify(postBody);
     return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`,
         SPHttpClient.configurations.v1,
@@ -105,30 +131,8 @@ export function getLatestItemId(spHttpClient: SPHttpClient,
 
 export function updateItem(data: IListItem, spHttpClient: SPHttpClient,
     siteUrl: string, listName: string): Promise<SPHttpClientResponse> {
-    // let latestItemId: number = undefined;
-    // return this.getLatestItemId()
-    //     .then((itemId: number): Promise<SPHttpClientResponse> => {
-    //         if (itemId === -1) {
-    //             throw new Error('No items found in the list');
-    //         }
-
-    //         latestItemId = itemId;
-
-    //         return spHttpClient.get(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${latestItemId})?$select=Title,Id`,
-    //             SPHttpClient.configurations.v1,
-    //             {
-    //                 headers: {
-    //                     'Accept': 'application/json;odata=nometadata',
-    //                     'odata-version': ''
-    //                 }
-    //             });
-    //     })
-    //     .then((response: SPHttpClientResponse): Promise<IListItem> => {
-    //         return response.json();
-    //     })
-    //     .then((item: IListItem): void => {
-
-    const body: string = JSON.stringify(data);
+    let postBody = toPostBody(data);
+    const body: string = JSON.stringify(postBody);
 
     return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${data.id})`,
         SPHttpClient.configurations.v1,
@@ -229,19 +233,7 @@ export function getLatestItem(spHttpClient: SPHttpClient,
             return response.json();
         })
         .then((item: any) => {
-            let newitem: IListItem = {
-                id: item["ID"],
-                title: item["Title"],
-                lastName: item["LastName"],
-                certifications: item["Certifications"],
-                department: item["Department"],
-                age: item["Age"],
-                familyIncome: item["Family_x0020_Income"],
-                dOB: item["Date_x0020_of_x0020_Birth"],
-                married: item["Married"],
-                linkedIn: item["Linkedin_x0020_Profile"],
-                photo: undefined
-            };
+            let newitem: IListItem = toListItem(item);
             return newitem;
         }, (error: any): void => {
             return error;

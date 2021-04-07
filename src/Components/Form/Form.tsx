@@ -227,9 +227,10 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                 label="Married ?"
                                 options={maritalOptions}
                                 defaultValue={
-                                    this.state.item === undefined ? 'No' :
+                                    this.state.item === undefined ? '' :
                                         this.state.item.married === undefined ? "" :
-                                            this.state.item.married
+                                            maritalOptions[0].key === this.state.item.married ?
+                                                maritalOptions[0].text : maritalOptions[1].text
                                 }
                                 onChange={(event: any, selectedOption: IDropdownOption) => {
                                     this.handleChange(Keys.Married, selectedOption);
@@ -244,7 +245,7 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                     this.state.item.linkedIn === undefined ? "" :
                                         this.state.item.linkedIn}
                                 onChange={(event: any) => {
-                                    this.handleIntegerInputChange(Keys.LinkedIn, event.target.value);
+                                    this.handleChange(Keys.LinkedIn, event.target.value);
                                 }}
                             />
                         </div>

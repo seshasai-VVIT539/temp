@@ -163,70 +163,78 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
   }
 
   updateItem(): void {
-    this.setState({
-      status: "Update"
-    });
-
-    let latestItemId: number = undefined;
-
-    getLatestItemId(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
-      .then((itemId: number): Promise<SPHttpClientResponse> => {
-        if (itemId === -1) {
-          throw new Error('No items found in the list');
-        }
-
-        latestItemId = itemId;
+    getLatestItem(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
+      .then((item) => {
         this.setState({
-          status: `Loading information about item ID: ${latestItemId}...`,
-          items: []
-        });
-
-        return this.props.spHttpClient.get(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${latestItemId})?$select=Title,Id`,
-          SPHttpClient.configurations.v1,
-          {
-            headers: {
-              'Accept': 'application/json;odata=nometadata',
-              'odata-version': ''
-            }
-          });
-      })
-      .then((response: SPHttpClientResponse): Promise<IListItem> => {
-        return response.json();
-      })
-      .then((item: IListItem): void => {
-        this.setState({
-          status: "update",
+          status: "Update",
           selectedItem: item
         });
-
-        // const body: string = JSON.stringify({
-        //   'Title': `Updated Item ${new Date()}`
-        // });
-
-        // this.props.spHttpClient.post(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${item.ID})`,
-        //   SPHttpClient.configurations.v1,
-        //   {
-        //     headers: {
-        //       'Accept': 'application/json;odata=nometadata',
-        //       'Content-type': 'application/json;odata=nometadata',
-        //       'odata-version': '',
-        //       'IF-MATCH': '*',
-        //       'X-HTTP-Method': 'MERGE'
-        //     },
-        //     body: body
-        //   })
-        //   .then((response: SPHttpClientResponse): void => {
-        //     this.setState({
-        //       status: `Item with ID: ${latestItemId} successfully updated`,
-        //       items: []
-        //     });
-        //   }, (error: any): void => {
-        //     this.setState({
-        //       status: `Error updating item: ${error}`,
-        //       items: []
-        //     });
-        //   });
+      })
+      .catch((error) => {
+        this.setState({
+          status: error
+        })
       });
+    // let latestItemId: number = undefined;
+
+    // getLatestItemId(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
+    //   .then((itemId: number): Promise<SPHttpClientResponse> => {
+    //     if (itemId === -1) {
+    //       throw new Error('No items found in the list');
+    //     }
+
+    //     latestItemId = itemId;
+    //     this.setState({
+    //       status: `Loading information about item ID: ${latestItemId}...`,
+    //       items: []
+    //     });
+
+    //     return this.props.spHttpClient.get(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${latestItemId})?$select=Title,Id`,
+    //       SPHttpClient.configurations.v1,
+    //       {
+    //         headers: {
+    //           'Accept': 'application/json;odata=nometadata',
+    //           'odata-version': ''
+    //         }
+    //       });
+    //   })
+    //   .then((response: SPHttpClientResponse): Promise<IListItem> => {
+    //     return response.json();
+    //   })
+    //   .then((item: IListItem): void => {
+    //     this.setState({
+    //       status: "update",
+    //       selectedItem: item
+    //     });
+
+    // const body: string = JSON.stringify({
+    //   'Title': `Updated Item ${new Date()}`
+    // });
+
+    // this.props.spHttpClient.post(`${this.props.siteUrl}/_api/web/lists/getbytitle('${this.props.listName}')/items(${item.ID})`,
+    //   SPHttpClient.configurations.v1,
+    //   {
+    //     headers: {
+    //       'Accept': 'application/json;odata=nometadata',
+    //       'Content-type': 'application/json;odata=nometadata',
+    //       'odata-version': '',
+    //       'IF-MATCH': '*',
+    //       'X-HTTP-Method': 'MERGE'
+    //     },
+    //     body: body
+    //   })
+    //   .then((response: SPHttpClientResponse): void => {
+    //     this.setState({
+    //       status: `Item with ID: ${latestItemId} successfully updated`,
+    //       items: []
+    //     });
+    //   }, (error: any): void => {
+    //     this.setState({
+    //       status: `Error updating item: ${error}`,
+    //       items: []
+    //     });
+    //   });
+    // });
   }
 
   deleteItem(): void {
