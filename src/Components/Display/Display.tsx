@@ -49,10 +49,28 @@ export class Display extends React.Component<IDisplayProps>{
                     </div>
                     <div>
                         <Label>
-                            Family Income&nbsp;:&nbsp;{this.props.item[Keys.FamilyIncome]}
+                            Family Income&nbsp;:&nbsp;{this.props.item[Keys.FamilyIncome] != undefined &&
+                                "Rs." + this.props.item.familyIncome}
+                        </Label>
+                    </div>
+                    <div>
+                        <Label>
+                            Date of Birth&nbsp;:&nbsp;{this.props.item.dOB &&
+                                this.props.item.dOB.toJSON().slice(0, 10)
+                            }
                         </Label>
                     </div>
 
+                    <div>
+                        <Label>
+                            Married&nbsp;:&nbsp;{this.props.item.married}
+                        </Label>
+                    </div>
+                    <div>
+                        <Label>
+                            LinkedIn Profile&nbsp;:&nbsp;{this.props.item.linkedIn}
+                        </Label>
+                    </div>
                     <div className="row">
                         <div className="cell">
                             <input type="button"

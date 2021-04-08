@@ -9,6 +9,9 @@ import { SPHttpClient } from '@microsoft/sp-http';
 import { Display } from "../Display/Display";
 import {
     DatePicker,
+    DefaultButton,
+    Dialog,
+    DialogFooter,
     Dropdown,
     IDropdownOption,
     IDropdownStyles,
@@ -16,6 +19,7 @@ import {
     PrimaryButton,
     TextField
 } from 'office-ui-fabric-react';
+import { DialogBox, IDialogBoxProps } from "../DialogBox";
 
 interface IFormProps {
     item: IListItem | undefined,
@@ -27,10 +31,10 @@ interface IFormProps {
 }
 interface IFormState {
     item: IListItem,
-    display: boolean
+    display: boolean,
+    dialogProps: IDialogBoxProps,
+    dialogVisibility: boolean
 }
-
-
 
 const dropdownStyles: Partial<IDropdownStyles> = {
     dropdown: { width: 300 },
@@ -75,19 +79,25 @@ export class Form extends React.Component<IFormProps, IFormState> {
                     linkedIn: undefined,
                     photo: undefined
                 },
-            display: false
+            display: false,
+            dialogProps: undefined,
+            dialogVisibility: false
         }
         this.handleChange = this.handleChange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
         this.back = this.back.bind(this);
         this.handleIntegerInputChange = this.handleIntegerInputChange.bind(this);
+        this.updateItem = this.updateItem.bind(this);
+        this.createItem = this.createItem.bind(this);
     }
 
-    handleChange(key: string, value: string | IDropdownOption) {
+    handleChange(key: string, value: string | IDropdownOption | Date) {
         let newItem: IListItem = {
             ...this.state.item,
         };
-        if (typeof value == "string") {
+        if (key == "dOB") {
+            newItem[key] = (value as Date);
+        } else if (typeof value == "string") {
             newItem[key] = value;
         } else {
             newItem[key] = (value as IDropdownOption).text;
@@ -100,40 +110,80 @@ export class Form extends React.Component<IFormProps, IFormState> {
 
     handleIntegerInputChange(key: string, value: string) {
         const onlyNums = value.replace(/[^0-9]/g, '');
-        const age = Number(value);
+        const age = parseInt(value);
         let newItem: IListItem = {
             ...this.state.item,
         };
-        newItem[key] = Number(value);
+        if (age) {
+            newItem[key] = Number(value);
+        }
         this.setState({
             item: newItem,
             display: false
         })
 
     }
-
     back() {
         this.props.cancel();
     }
 
-    onSubmit() {
-        this.props.operation == "Create" ?
+    createItem() {
+        createItem(this.state.item, this.props.spHttpClient,
+            this.props.siteUrl, this.props.listName)
+            .then((response) => {
+                alert(response);
+                this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
+            })
+    }
 
+    updateItem() {
+        updateItem(this.state.item, this.props.spHttpClient,
+            this.props.siteUrl, this.props.listName)
+            .then((response) => {
+                alert(response);
+                this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
+            });
+    }
+
+    onSubmit() {
+
+        this.props.operation == "Create" ?
             createItem(this.state.item, this.props.spHttpClient,
                 this.props.siteUrl, this.props.listName)
                 .then((response) => {
                     alert(response);
-                    this.setState({ display: true })
+                    this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
                 })
             :
-
             updateItem(this.state.item, this.props.spHttpClient,
                 this.props.siteUrl, this.props.listName)
                 .then((response) => {
                     alert(response);
-                    this.setState({ display: true })
+                    this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
                 });
-
+        // if (this.props.operation == "Create") {
+        //     let dialogBoxProps: IDialogBoxProps = {
+        //         title: "Create Item",
+        //         subText: "Are you sure to create item ?",
+        //         ok: this.createItem,
+        //         cancel: this.back
+        //     };
+        //     this.setState({
+        //         dialogProps: dialogBoxProps,
+        //         dialogVisibility: true
+        //     });
+        // } else {
+        //     let dialogBoxProps: IDialogBoxProps = {
+        //         title: "Update Item",
+        //         subText: "Are you sure to update item ?",
+        //         ok: this.updateItem,
+        //         cancel: this.back
+        //     };
+        //     this.setState({
+        //         dialogProps: dialogBoxProps,
+        //         dialogVisibility: true
+        //     });
+        // }
     }
 
     render() {
@@ -178,6 +228,7 @@ export class Form extends React.Component<IFormProps, IFormState> {
                             <Dropdown
                                 placeholder="Select Department"
                                 label="Department"
+                                selectedKey={this.state.item.department}
                                 onChange={(event: any, selectedOption: IDropdownOption) => {
                                     this.handleChange(Keys.Department, selectedOption);
                                 }}
@@ -188,8 +239,10 @@ export class Form extends React.Component<IFormProps, IFormState> {
                         <div>
                             <TextField label="Age"
                                 defaultValue={this.state.item === undefined ? "" :
-                                    this.state.item.age === undefined ? "" :
-                                        String(this.state.item.age)}
+                                    this.state.item.age ?
+                                        String(this.state.item.age) : ""
+                                }
+                                value={this.state.item.age ? String(this.state.item.age) : ""}
                                 onChange={(event: any) => {
                                     this.handleIntegerInputChange(Keys.Age, event.target.value);
                                 }}
@@ -198,8 +251,12 @@ export class Form extends React.Component<IFormProps, IFormState> {
                         <div>
                             <TextField label="Family Income"
                                 defaultValue={this.state.item === undefined ? "" :
-                                    this.state.item.familyIncome === undefined ? "" :
-                                        String(this.state.item.familyIncome)}
+                                    this.state.item.familyIncome ?
+                                        String(this.state.item.familyIncome) : ""
+                                }
+                                value={this.state.item.familyIncome ?
+                                    String(this.state.item.familyIncome) : ""
+                                }
                                 onChange={(event: any) => {
                                     this.handleIntegerInputChange(Keys.FamilyIncome, event.target.value);
                                 }}
@@ -211,13 +268,14 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                 placeholder="Select Date of Birth"
                                 label="Date of Birth"
                                 ariaLabel="Date of Birth"
+                                value={this.state.item.dOB}
                                 defaultValue={
                                     this.state.item === undefined &&
                                     this.state.item.dOB === undefined &&
                                     this.state.item.dOB.toDateString()
                                 }
-                                onChange={(event: any) => {
-                                    this.handleChange(Keys.DOB, event.target.value);
+                                onSelectDate={(selectedDate: Date) => {
+                                    this.handleChange(Keys.DOB, selectedDate);
                                 }}
                             />
                         </div>
@@ -226,12 +284,8 @@ export class Form extends React.Component<IFormProps, IFormState> {
                                 placeholder="Is married?"
                                 label="Married ?"
                                 options={maritalOptions}
-                                defaultValue={
-                                    this.state.item === undefined ? '' :
-                                        this.state.item.married === undefined ? "" :
-                                            maritalOptions[0].key === this.state.item.married ?
-                                                maritalOptions[0].text : maritalOptions[1].text
-                                }
+                                defaultSelectedKeys={["No"]}
+                                selectedKey={this.state.item.married}
                                 onChange={(event: any, selectedOption: IDropdownOption) => {
                                     this.handleChange(Keys.Married, selectedOption);
                                 }}
@@ -267,6 +321,15 @@ export class Form extends React.Component<IFormProps, IFormState> {
                     this.state.display &&
                     <Display item={this.state.item}
                         back={this.back}
+                    />
+                }
+                {
+                    this.state.dialogVisibility &&
+                    <DialogBox
+                        title={this.state.dialogProps.title}
+                        subText={this.state.dialogProps.subText}
+                        ok={this.state.dialogProps.ok}
+                        cancel={this.state.dialogProps.cancel}
                     />
                 }
             </div>

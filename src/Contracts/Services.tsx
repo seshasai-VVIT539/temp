@@ -31,7 +31,7 @@ function toListItem(item: any): IListItem {
         age: item["Age"],
         familyIncome: item["Family_x0020_Income"],
         dOB: item["Date_x0020_of_x0020_Birth"],
-        married: item["Married"],
+        married: item["Married"] == true ? "Yes" : "No",
         linkedIn: item["Linkedin_x0020_Profile"]["Url"],
         photo: undefined
     };
@@ -44,7 +44,24 @@ export function createItem(
     siteUrl: string,
     listName: string
 ): Promise<SPHttpClientResponse> {
-    let postBody = toPostBody(data);
+    let postBody = {
+        "Title": data.title,
+        "LastName": data.lastName,
+        "Certifications": data.certifications,
+        "Department": data.department,
+        "Age": data.age,
+        "Family_x0020_Income": data.familyIncome,
+        "Married": data.married == "Yes" ? true : false,
+    };
+    if (data.dOB) {
+        postBody["Date_x0020_of_x0020_Birth"] = data.dOB.toJSON().slice(0, 10);
+    }
+    if (data.linkedIn != undefined && data.linkedIn.length != 0) {
+        postBody["Linkedin_x0020_Profile"] = {
+            'Description': 'Linkedin Profile',
+            'Url': data.linkedIn
+        }
+    }
     const body: string = JSON.stringify(postBody);
     return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`,
         SPHttpClient.configurations.v1,
@@ -94,11 +111,7 @@ export function getAllItems(spHttpClient: SPHttpClient,
 
 export function getLatestItemId(spHttpClient: SPHttpClient,
     siteUrl: string, listName: string): Promise<number> {
-    getAllItems(spHttpClient, siteUrl, listName)
-        .then((respose) => {
-            console.log("all the items are \n");
-            console.log(respose);
-        });
+
     return new Promise<number>((resolve: (itemId: number) => void,
         reject: (error: any) => void): void => {
         spHttpClient.get(
@@ -131,7 +144,24 @@ export function getLatestItemId(spHttpClient: SPHttpClient,
 
 export function updateItem(data: IListItem, spHttpClient: SPHttpClient,
     siteUrl: string, listName: string): Promise<SPHttpClientResponse> {
-    let postBody = toPostBody(data);
+    let postBody = {
+        "Title": data.title,
+        "LastName": data.lastName,
+        "Certifications": data.certifications,
+        "Department": data.department,
+        "Age": data.age,
+        "Family_x0020_Income": data.familyIncome,
+        "Married": data.married == "Yes" ? true : false,
+    };
+    if (data.dOB) {
+        postBody["Date_x0020_of_x0020_Birth"] = data.dOB.toJSON().slice(0, 10);
+    }
+    if (data.linkedIn != undefined && data.linkedIn.length != 0) {
+        postBody["Linkedin_x0020_Profile"] = {
+            'Description': 'Linkedin Profile',
+            'Url': data.linkedIn
+        }
+    }
     const body: string = JSON.stringify(postBody);
 
     return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${data.id})`,
@@ -161,56 +191,52 @@ export function updateItem(data: IListItem, spHttpClient: SPHttpClient,
 }
 
 export function deleteItem(spHttpClient: SPHttpClient, siteUrl: string,
-    listName: string): Promise<SPHttpClientResponse> {
+    listName: string): Promise<string> {
+
     let latestItemId: number = undefined;
     let etag: string = undefined;
-    return this.getLatestItemId()
+    return getLatestItemId(spHttpClient, siteUrl, listName)
         .then((itemId: number): Promise<SPHttpClientResponse> => {
             if (itemId === -1) {
                 throw new Error('No items found in the list');
             }
 
-            latestItemId = itemId;
+            //     latestItemId = itemId;
 
-            return spHttpClient.get(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${latestItemId})?$select=Id`,
-                SPHttpClient.configurations.v1,
-                {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'odata-version': ''
-                    }
-                });
-        })
-        .then((response: SPHttpClientResponse): Promise<IListItem> => {
-            etag = response.headers.get('ETag');
-            return response.json();
-        })
-        .then((item: IListItem): Promise<SPHttpClientResponse> => {
+            //     return spHttpClient.get(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})?$select=Id`,
+            //         SPHttpClient.configurations.v1,
+            //         {
+            //             headers: {
+            //                 'Accept': 'application/json;odata=nometadata',
+            //                 'odata-version': ''
+            //             }
+            //         });
+            // })
+            // .then((response: SPHttpClientResponse): Promise<IListItem> => {
+            //     etag = response.headers.get('ETag');
+            //     return response.json();
+            // })
+            // .then((item: IListItem): Promise<SPHttpClientResponse> => {
 
-            return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${item.id})`,
+            return spHttpClient.post(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})`,
                 SPHttpClient.configurations.v1,
                 {
                     headers: {
                         'Accept': 'application/json;odata=nometadata',
                         'Content-type': 'application/json;odata=verbose',
                         'odata-version': '',
-                        'IF-MATCH': etag,
+                        'IF-MATCH': '*',
                         'X-HTTP-Method': 'DELETE'
                     }
                 });
         })
         .then((response: SPHttpClientResponse) => {
-            return {
-                status: `Item with ID: ${latestItemId} successfully deleted`
-            };
+            return `Item with ID: ${latestItemId} successfully deleted`
         }, (error: any): void => {
-            this.setState({
-                status: `Error deleting item: ${error}`,
-                items: []
-            });
+            return error;
         })
         .catch((error: any) => {
-            return Error;
+            return error;
         });
 }
 
@@ -233,7 +259,30 @@ export function getLatestItem(spHttpClient: SPHttpClient,
             return response.json();
         })
         .then((item: any) => {
-            let newitem: IListItem = toListItem(item);
+            let newitem: IListItem = {
+                id: item["Id"],
+                title: item["Title"],
+                lastName: item["LastName"],
+                certifications: item["Certifications"],
+                department: item["Department"],
+                age: item["Age"],
+                familyIncome: item["Family_x0020_Income"],
+                dOB: item["Date_x0020_of_x0020_Birth"],
+                married: item["Married"] == true ? "Yes" : "No",
+                linkedIn: undefined,
+                photo: undefined
+            };
+            if (item["Linkedin_x0020_Profile"] != undefined &&
+                item["Linkedin_x0020_Profile"]["Url"] != undefined) {
+                newitem.linkedIn = item["Linkedin_x0020_Profile"]["Url"];
+            }
+            let str = item["Date_x0020_of_x0020_Birth"];
+            let temp: Date = new Date(
+                parseInt(str.slice(0, 4)),
+                parseInt(str.slice(5, 7)),
+                parseInt(str.slice(8, 10))
+            );
+            newitem.dOB = temp;
             return newitem;
         }, (error: any): void => {
             return error;
