@@ -6,11 +6,14 @@ import { Form } from '../../../Components/Form/Form';
 import { Display } from '../../../Components/Display/Display';
 import { deleteItem, getAllItems, getLatestItem, getLatestItemId } from '../../../Contracts/Services';
 import { PrimaryButton } from 'office-ui-fabric-react';
+import { DialogBox, IDialogBoxProps } from '../../../Components/DialogBox';
 
 export interface IReactCrudState {
   status: string;
   selectedItem: IListItem | undefined;
   items: IListItem[];
+  dialogProps: IDialogBoxProps;
+  dialogVisibility: boolean
 }
 export interface ICrudOperationsProps {
   listName: string;
@@ -24,6 +27,8 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
     this.state = {
       status: "Ready",
       items: [],
+      dialogProps: undefined,
+      dialogVisibility: false,
       selectedItem: undefined
     }
     this.cancelAction = this.cancelAction.bind(this);
@@ -32,7 +37,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
     this.readItem = this.readItem.bind(this);
     this.updateItem = this.updateItem.bind(this);
     this.deleteItem = this.deleteItem.bind(this);
-    this.componentDidUpdate = this.componentDidUpdate.bind(this);
+    this.deleteClicked = this.deleteClicked.bind(this);
   }
 
   // getLatestItemId(): Promise<number> {
@@ -76,9 +81,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
       selectedItem: undefined
     });
   }
-  componentDidUpdate() {
-    console.log(this.state);
-  }
+
   readItem(): void {
     getLatestItem(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
       .then((item) => {
@@ -104,19 +107,38 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
       });
   }
 
+  deleteClicked(): void {
+    let dialogBoxProps: IDialogBoxProps = {
+      title: "Delete Item",
+      subText: "Are you sure to delete item ?",
+      ok: this.deleteItem,
+      cancel: this.cancelAction
+    };
+    this.setState({
+      dialogVisibility: true,
+      dialogProps: dialogBoxProps
+    })
+  }
+
   deleteItem(): void {
-    if (!window.confirm('Are you sure you want to delete the latest item?')) {
-      return;
-    }
+    // if (!window.confirm('Are you sure you want to delete the latest item?')) {
+    //   return;
+    // }
+
     deleteItem(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
       .then((response) => {
+        console.log(response);
         this.setState({
-          status: response
+          status: "Ready",
+          dialogProps: undefined,
+          dialogVisibility: false
         })
       })
       .catch((error) => {
         this.setState({
-          status: error
+          status: error,
+          dialogProps: undefined,
+          dialogVisibility: false
         })
       });
     // getLatestItemId(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
@@ -202,7 +224,7 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
                   <PrimaryButton text="Update item" onClick={() => this.updateItem()} />
                 </div>
                 <div className="ms-Grid-col" >
-                  <PrimaryButton text="Delete item" onClick={() => this.deleteItem()} />
+                  <PrimaryButton text="Delete item" onClick={() => this.deleteClicked()} />
                 </div>
               </div>
 
@@ -232,6 +254,15 @@ export default class CrudOperations extends React.Component<ICrudOperationsProps
           <Display
             back={this.cancelAction}
             item={this.state.selectedItem}
+          />
+        }
+        {
+          this.state.dialogVisibility &&
+          <DialogBox
+            title={this.state.dialogProps.title}
+            subText={this.state.dialogProps.subText}
+            ok={this.state.dialogProps.ok}
+            cancel={this.state.dialogProps.cancel}
           />
         }
       </div >

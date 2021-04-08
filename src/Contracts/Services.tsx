@@ -277,12 +277,14 @@ export function getLatestItem(spHttpClient: SPHttpClient,
                 newitem.linkedIn = item["Linkedin_x0020_Profile"]["Url"];
             }
             let str = item["Date_x0020_of_x0020_Birth"];
-            let temp: Date = new Date(
-                parseInt(str.slice(0, 4)),
-                parseInt(str.slice(5, 7)),
-                parseInt(str.slice(8, 10))
-            );
-            newitem.dOB = temp;
+            if (str) {
+                let temp: Date = new Date(
+                    parseInt(str.slice(0, 4)),
+                    parseInt(str.slice(5, 7)),
+                    parseInt(str.slice(8, 10))
+                );
+                newitem.dOB = temp;
+            }
             return newitem;
         }, (error: any): void => {
             return error;

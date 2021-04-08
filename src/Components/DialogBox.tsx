@@ -9,7 +9,7 @@ export interface IDialogBoxProps {
     cancel: () => void
 }
 interface IDialogBoxState {
-    hideDialog: boolean,
+    // hideDialog: boolean,
     dialogContentProps: {
         type: DialogType,
         title: string,
@@ -28,37 +28,41 @@ export class DialogBox extends React.Component<IDialogBoxProps, IDialogBoxState>
             subText: this.props.subText
         };
         this.state = {
-            hideDialog: false,
+            // hideDialog: false,
             dialogContentProps: dialogContent
 
         }
-        this.toggleHideDialog = this.toggleHideDialog.bind(this);
+        // this.toggleHideDialog = this.toggleHideDialog.bind(this);
     }
 
-    toggleHideDialog() {
-        this.setState({
-            hideDialog: true
-        });
-        this.props.cancel();
-    }
+    // toggleHideDialog() {
+    //     this.setState({
+    //         hideDialog: true
+    //     });
+    //     this.props.cancel();
+    // }
 
     render() {
         return (
             <>
                 <Dialog
-                    hidden={this.state.hideDialog}
-                    onDismiss={this.toggleHideDialog}
+                    // hidden={this.state.hideDialog}
+                    hidden={false}
+                    // onDismiss={this.toggleHideDialog}
+                    onDismiss={() => {
+                        this.props.cancel();
+                    }}
                     dialogContentProps={this.state.dialogContentProps}
                 >
                     <DialogFooter>
                         <PrimaryButton onClick={() => {
-                            this.toggleHideDialog();
+                            // this.toggleHideDialog();
                             this.props.ok();
                         }}
                             text="Ok"
                         />
                         <DefaultButton onClick={() => {
-                            this.toggleHideDialog();
+                            // this.toggleHideDialog();
                             this.props.cancel();
                         }}
                             text="Cancel"

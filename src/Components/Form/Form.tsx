@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
     createItem,
+    getLatestItem,
     updateItem
 } from "../../Contracts/Services";
 import { IListItem, Keys } from "../../Concerns/IListItem";
@@ -123,6 +124,7 @@ export class Form extends React.Component<IFormProps, IFormState> {
         })
 
     }
+
     back() {
         this.props.cancel();
     }
@@ -131,8 +133,16 @@ export class Form extends React.Component<IFormProps, IFormState> {
         createItem(this.state.item, this.props.spHttpClient,
             this.props.siteUrl, this.props.listName)
             .then((response) => {
-                alert(response);
-                this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
+                // alert(response);
+                getLatestItem(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
+                    .then((resultedItem) => {
+                        this.setState({
+                            display: true,
+                            dialogProps: undefined,
+                            dialogVisibility: false,
+                            item: resultedItem
+                        })
+                    })
             })
     }
 
@@ -140,50 +150,58 @@ export class Form extends React.Component<IFormProps, IFormState> {
         updateItem(this.state.item, this.props.spHttpClient,
             this.props.siteUrl, this.props.listName)
             .then((response) => {
-                alert(response);
-                this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
+                // alert(response);
+                getLatestItem(this.props.spHttpClient, this.props.siteUrl, this.props.listName)
+                    .then((resultedItem) => {
+                        this.setState({
+                            display: true,
+                            dialogProps: undefined,
+                            dialogVisibility: false,
+                            item: resultedItem
+                        })
+                    })
             });
     }
 
     onSubmit() {
 
-        this.props.operation == "Create" ?
-            createItem(this.state.item, this.props.spHttpClient,
-                this.props.siteUrl, this.props.listName)
-                .then((response) => {
-                    alert(response);
-                    this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
-                })
-            :
-            updateItem(this.state.item, this.props.spHttpClient,
-                this.props.siteUrl, this.props.listName)
-                .then((response) => {
-                    alert(response);
-                    this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
-                });
-        // if (this.props.operation == "Create") {
-        //     let dialogBoxProps: IDialogBoxProps = {
-        //         title: "Create Item",
-        //         subText: "Are you sure to create item ?",
-        //         ok: this.createItem,
-        //         cancel: this.back
-        //     };
-        //     this.setState({
-        //         dialogProps: dialogBoxProps,
-        //         dialogVisibility: true
-        //     });
-        // } else {
-        //     let dialogBoxProps: IDialogBoxProps = {
-        //         title: "Update Item",
-        //         subText: "Are you sure to update item ?",
-        //         ok: this.updateItem,
-        //         cancel: this.back
-        //     };
-        //     this.setState({
-        //         dialogProps: dialogBoxProps,
-        //         dialogVisibility: true
-        //     });
-        // }
+        // this.props.operation == "Create" ?
+        //     createItem(this.state.item, this.props.spHttpClient,
+        //         this.props.siteUrl, this.props.listName)
+        //         .then((response) => {
+        //             alert(response);
+        //             this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
+        //         })
+        //     :
+        //     updateItem(this.state.item, this.props.spHttpClient,
+        //         this.props.siteUrl, this.props.listName)
+        //         .then((response) => {
+        //             alert(response);
+        //             this.setState({ display: true, dialogProps: undefined, dialogVisibility: false })
+        //         });
+        if (this.props.operation == "Create") {
+            let dialogBoxProps: IDialogBoxProps = {
+                title: "Create Item",
+                subText: "Are you sure to create item ?",
+                ok: this.createItem,
+                cancel: this.back
+            };
+            this.setState({
+                dialogProps: dialogBoxProps,
+                dialogVisibility: true
+            });
+        } else {
+            let dialogBoxProps: IDialogBoxProps = {
+                title: "Update Item",
+                subText: "Are you sure to update item ?",
+                ok: this.updateItem,
+                cancel: this.back
+            };
+            this.setState({
+                dialogProps: dialogBoxProps,
+                dialogVisibility: true
+            });
+        }
     }
 
     render() {
